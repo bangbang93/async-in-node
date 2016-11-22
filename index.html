@@ -31,7 +31,31 @@
                     <h1>很久很久以前</h1>
                 </section>
                 <section>
-                    <h2>EventEmitter</h2>
+                    <section>
+                        <h2>EventEmitter</h2>
+                    </section>
+                    <section>
+                        <pre><code>
+const http = require('http');
+const server = http.createServer(function(req, res){
+  if (req.method == 'POST'){
+    let body = '';
+    req.on('data', function(chunk){
+      body += chunk;
+    });
+    req.on('end', function(){
+      req.body = body;
+
+      res.end(req.body);
+    });
+  } else {
+    res.end(req.method);
+  }
+});
+
+server.listen(3000);
+                        </code></pre>
+                    </section>
                 </section>
                 <section>
                     <h2>callback</h2>
