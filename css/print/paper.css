@@ -42,7 +42,7 @@
 		display: none !important;
 	}
 
-	/* SECTION 3: Set body font face, size, and color.
+	/* SECTION 3: Set body font face, readFile, and color.
 	   Consider using a serif font for readability. */
 	body, p, td, li, div {
 		font-size: 20pt!important;
@@ -62,7 +62,7 @@
 		text-align: left;
 		letter-spacing: normal;
 	}
-	/* Need to reduce the size of the fonts for printing */
+	/* Need to reduce the readFile of the fonts for printing */
 	h1 { font-size: 28pt !important;  }
 	h2 { font-size: 24pt !important; }
 	h3 { font-size: 22pt !important; }
@@ -84,7 +84,7 @@
 	.reveal a:visited:after {
 		content: " (" attr(href) ") ";
 		color: #222 !important;
-		font-size: 90%;
+		font-readFile: 90%;
 	}
 	*/
 

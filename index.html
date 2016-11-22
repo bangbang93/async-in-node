@@ -36,7 +36,7 @@
                         <h6>世界的基础</h6>
                     </section>
                     <section>
-                        <pre><code>const http = require('http');
+                        <pre><code class="javascript">const http = require('http');
 const server = http.createServer(function(req, res){
   if (req.method == 'POST'){
     let body = '';
@@ -62,7 +62,7 @@ server.listen(3000);
                         <h2>callback</h2>
                     </section>
                     <section>
-                        <pre><code>const http = require('http');
+                        <pre><code class="javascript">const http = require('http');
 const server = http.createServer(function(req, res){
   if (req.method == 'POST'){
     let body = '';
@@ -94,7 +94,7 @@ function handleRequest(req, res){
                         <h3>建立标准</h3>
                     </section>
                     <section>
-                        <pre><code>const http = require('http');
+                        <pre><code class="javascript">const http = require('http');
 const server = http.createServer(function(req, res){
   if (req.method == 'POST'){
     let body = '';
@@ -135,7 +135,7 @@ function handleRequest(err, {req, res} = {}){
                         <h2>异步之间互相依赖</h2>
                     </section>
                     <section>
-                        <pre><code>const fs = require('fs');
+                        <pre><code class="javascript">const fs = require('fs');
 
 let buffer;
 
@@ -174,17 +174,73 @@ fs.readFile('01.EventEmitter.js', function (err, data) {
                         <img src="img/async.js.png" alt="async.js">
                     </section>
                     <section>
+                        <pre><code class="javascript">const async = require('async');
+const fs = require('fs');
 
+let files = ['01.EventEmitter.js', '02.Callback.js', '03.Callback2.js', '04.CallbackFS.js'];
+
+async.map(files, fs.readFile, function (err, files) {
+  let buffer = Buffer.concat(files);
+  console.log(buffer.toString());
+});</code></pre>
+                    </section>
+                    <section>
+                        <pre><code class="javascript">const async = require('async');
+
+async.waterfall([
+  function init(cb){
+    return cb(null, 1);
+  },
+  function add2(data, cb){
+    return cb(null, data + 2);
+  },
+  function mul5(data, cb){
+    return cb(null, data * 5);
+  }
+], function (err, data) {
+  console.log(data);
+});</code></pre>
                     </section>
                 </section>
                 <section>
-                    <h2>Thunk</h2>
+                    <section>
+                        <h2>Thunks</h2>
+                        <ol>
+                            <li>thunk 是一个被封装了同步或异步任务的函数</li>
+                            <li>thunk 有唯一一个参数 callback，是 CPS 函数</li>
+                            <li>thunk 运行后返回新的 thunk 函数，形成链式调用</li>
+                            <li>thunk 自身执行完毕后，结果进入 callback 运行</li>
+                            <li>callback 的返回值如果是 thunk 函数，则等该 thunk 执行完毕将结果输入新 thunk 函数运行；如果是其它值，则当做正确结果进入新的 thunk 函数运行</li>
+                        </ol>
+                    </section>
+                    <section>
+                        说了这么多，实际上什么效果呢
+                    </section>
+                    <section>
+                        <pre><code class="javascript">const thunk = require('thunks')()
+const fs = require('fs');
+const readFile = thunk.thunkify(fs.readFile);
+
+thunk.all([
+  readFile('01.EventEmitter.js'),
+  readFile('02.Callback.js'),
+  readFile('03.Callback2.js')
+])(function (error, res) {
+  console.log(Buffer.concat(res));
+});</code></pre>
+                    </section>
                 </section>
                 <section>
-                    <h2>then.js</h2>
+                    <h2>thenjs</h2>
+                    <p class="fragment">我也没用过，就不展开讲了</p>
                 </section>
                 <section>
-                    <h2>Promise</h2>
+                    <h2>Promise系列</h2>
+                    <ul>
+                        <li>Q</li>
+                        <li>Bluebird</li>
+                        <li>m-promise</li>
+                    </ul>
                 </section>
                 <section>
                     <h1>Node.JS4/io.js</h1>

@@ -250,7 +250,7 @@ Reveal.initialize({
 	// Parallax background image
 	parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
 
-	// Parallax background size
+	readFile
 	parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
 
 	// Number of pixels to move the parallax background per slide
