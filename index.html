@@ -231,7 +231,7 @@ thunk.all([
                     </section>
                 </section>
                 <section>
-                    <h2>thenjs</h2>
+                    <h2>thenjs 以及其他</h2>
                     <p class="fragment">我也没用过，就不展开讲了</p>
                 </section>
                 <section>
@@ -241,6 +241,27 @@ thunk.all([
                         <li>Bluebird</li>
                         <li>m-promise</li>
                     </ul>
+                </section>
+                <section>
+                    <pre><code class="javascript">const Promise = require('bluebird');
+const fs = Promise.promisifyAll(require('fs'));
+
+
+fs.readFileAsync('01.EventEmitter.js')
+  .then((data)=>{
+    return fs.readFileAsync('02.Callback.js');
+  })
+  .then((data)=>{
+    console.log(data);
+  });
+
+Promise.all([
+  fs.readFileAsync('01.EventEmitter.js'),
+  fs.readFileAsync('02.Callback.js'),
+  fs.readFileAsync('03.Callback2.js'),
+]).then((res)=>{
+  console.log(Buffer.concat(res).toString());
+});</code></pre>
                 </section>
                 <section>
                     <h1>Node.JS4/io.js</h1>
