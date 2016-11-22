@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>NodeJS异步发展史</title>
 
 		<link rel="stylesheet" href="css/reveal.css">
 		<link rel="stylesheet" href="css/theme/black.css">
@@ -33,10 +33,10 @@
                 <section>
                     <section>
                         <h2>EventEmitter</h2>
+                        <h6>世界的基础</h6>
                     </section>
                     <section>
-                        <pre><code>
-const http = require('http');
+                        <pre><code>const http = require('http');
 const server = http.createServer(function(req, res){
   if (req.method == 'POST'){
     let body = '';
@@ -58,22 +58,133 @@ server.listen(3000);
                     </section>
                 </section>
                 <section>
-                    <h2>callback</h2>
+                    <section>
+                        <h2>callback</h2>
+                    </section>
+                    <section>
+                        <pre><code>const http = require('http');
+const server = http.createServer(function(req, res){
+  if (req.method == 'POST'){
+    let body = '';
+    req.on('data', function(chunk){
+      body += chunk;
+    });
+    req.on('end', function(){
+      req.body = body;
+
+      handleRequest(req, res);
+    });
+  } else {
+    handleRequest(req, res);
+  }
+});
+
+server.listen(3000);
+
+function handleRequest(req, res){
+  if (req.method == 'POST'){
+    res.end(req.body);
+  } else {
+    res.end(req.method);
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h3>建立标准</h3>
+                    </section>
+                    <section>
+                        <pre><code>const http = require('http');
+const server = http.createServer(function(req, res){
+  if (req.method == 'POST'){
+    let body = '';
+    req.on('data', function(chunk){
+      body += chunk;
+    });
+    req.on('end', function(){
+      req.body = body;
+
+      if (body == 'err'){
+        return handleRequest(new Error('client send error'));
+      }
+
+      handleRequest(null, {req, res});
+    });
+    req.on('aborted', function () {
+      let err = new Error('client abort request');
+      handleRequest(err)
+    })
+  } else {
+    handleRequest(null, {req, res});
+  }
+});
+
+server.listen(3000);
+
+function handleRequest(err, {req, res} = {}){
+  if (err) return console.error(err);
+  if (req.method == 'POST'){
+    res.end(req.body);
+  } else {
+    res.end(req.method);
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h2>异步之间互相依赖</h2>
+                    </section>
+                    <section>
+                        <pre><code>const fs = require('fs');
+
+let buffer;
+
+fs.readFile('01.EventEmitter.js', function (err, data) {
+  buffer = data;
+  fs.readFile('02.Callback.js', function (err, data) {
+    buffer = Buffer.concat([buffer, data]);
+    fs.readFile('03.Callback2.js', function (err, data) {
+      buffer = Buffer.concat([buffer, data]);
+      fs.readFile('04.CallbackFS.js', function (err, data) {
+        buffer = Buffer.concat([buffer, data]);
+        console.log(buffer.toString());
+      })
+    })
+  })
+});
+                        </code></pre>
+                    </section>
                 </section>
                 <section>
-                    <h1>callback Hell</h1>
+                    <section><h1>callback Hell</h1></section>
+                    <section>
+                        <img src="img/callbackHell.png" alt="callback hell">
+                    </section>
+                    <section>
+                        <img src="img/didi-callback.jpg" alt="didi callback hell">
+                        滴滴线上代码> http://www.kuaidadi.com/assets/js/animate.js
+                    </section>
                 </section>
                 <section>
-                    <h2>Promise</h2>
+                    <h1>百家争鸣的时代</h1>
                 </section>
                 <section>
-                    <h2>async.js</h2>
+                    <section>
+                        <h2>async.js</h2>
+                        <img src="img/async.js.png" alt="async.js">
+                    </section>
+                    <section>
+
+                    </section>
                 </section>
                 <section>
                     <h2>Thunk</h2>
                 </section>
                 <section>
                     <h2>then.js</h2>
+                </section>
+                <section>
+                    <h2>Promise</h2>
                 </section>
                 <section>
                     <h1>Node.JS4/io.js</h1>
