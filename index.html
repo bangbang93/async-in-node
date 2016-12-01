@@ -152,23 +152,27 @@ function handleRequest(err, {req, res} = {}){
                         <h2>异步之间互相依赖</h2>
                     </section>
                     <section>
-                        <pre><code class="javascript">const fs = require('fs');
-
-let buffer;
-
-fs.readFile('01.EventEmitter.js', function (err, data) {
-  buffer = data;
-  fs.readFile('02.Callback.js', function (err, data) {
-    buffer = Buffer.concat([buffer, data]);
-    fs.readFile('03.Callback2.js', function (err, data) {
-      buffer = Buffer.concat([buffer, data]);
-      fs.readFile('04.CallbackFS.js', function (err, data) {
-        buffer = Buffer.concat([buffer, data]);
-        console.log(buffer.toString());
+                        <h3>怎么把大箱塞进冰箱里</h3>
+                        <pre><code class="javascript">const putElephantIntoRefrigerator = function (callback) {
+  Refrigerator.findOne({
+    empty: true
+  }, function(err, refrigerator){
+    if (err) return callback(err);
+    Elephant.findOne({
+      alive: true
+    }, function(err, elephant){
+    if (err) return callback(err);
+      refrigerator.open(function(err){
+        if (err) return callback(err);
+        refrigerator.push(elephant);
+        refrigerator.close(function(err){
+          if (err) return callback(err);
+          callback(null, 'success');
+        })
       })
-    })
+    }))
   })
-});
+}
                         </code></pre>
                     </section>
                 </section>
@@ -191,31 +195,35 @@ fs.readFile('01.EventEmitter.js', function (err, data) {
                         <img src="img/async.js.png" alt="async.js">
                     </section>
                     <section>
-                        <pre><code class="javascript">const async = require('async');
-const fs = require('fs');
-
-let files = ['01.EventEmitter.js', '02.Callback.js', '03.Callback2.js', '04.CallbackFS.js'];
-
-async.map(files, fs.readFile, function (err, files) {
-  let buffer = Buffer.concat(files);
-  console.log(buffer.toString());
-});</code></pre>
-                    </section>
-                    <section>
-                        <pre><code class="javascript">const async = require('async');
-
-async.waterfall([
-  function init(cb){
-    return cb(null, 1);
+                        <pre><code class="javascript">async.waterfall([
+  function findRefrigerator(cb){
+    Refrigerator.findOne({
+      empty: true
+    },cb)
   },
-  function add2(data, cb){
-    return cb(null, data + 2);
+  function findElephant(refrigerator, cb){
+    Elephant.findOne({
+      alive: true
+  }, function(err, elephant){
+    if (err) return cb(err);
+    cb(null, refrigerator, elephant);
+  }),
+  function openReferigerator(refrigerator, elephant, cb){
+    refrigerator.open(function(err){
+      if (err) return err;
+      cb(refrigerator, elephant);
+    })
   },
-  function mul5(data, cb){
-    return cb(null, data * 5);
+  function putElephantIntoRefrigerator(refrigerator, elephant, cb){
+    refrigerator.push(elephant);
+    cb(refrigerator);
+  },
+  function closeRefrigerator(refrigerator, cb){
+    refrigerator.close(cb);
   }
-], function (err, data) {
-  console.log(data);
+], function (err, refrigerator) {
+  if (err) console.error(err);
+  console.log('success');
 });</code></pre>
                     </section>
                 </section>
@@ -234,17 +242,27 @@ async.waterfall([
                         说了这么多，实际上什么效果呢
                     </section>
                     <section>
-                        <pre><code class="javascript">const thunk = require('thunks')()
-const fs = require('fs');
-const readFile = thunk.thunkify(fs.readFile);
-
-thunk.all([
-  readFile('01.EventEmitter.js'),
-  readFile('02.Callback.js'),
-  readFile('03.Callback2.js')
-])(function (error, res) {
-  console.log(Buffer.concat(res));
-});</code></pre>
+                        <pre><code class="javascript">const putElephantIntoRefrigerator = function () {
+  return Refrigerator.findOne({
+    empty: true
+  })((err, refrigerator)=>{
+    if (err) return throw err;
+    return Elephant.findOne({
+      alive: true
+    }))((elephant)=>[refrigerator, elephant])
+  })((err, [refrigerator, elephant])=>{
+    if (err) return throw err;
+      return refrigerator.open()((refrigerator, elephant)=>[refrigerator, elephant])
+  })((err, [refrigerator, elephant])=>{
+    if (err) return throw err;
+    refrigerator.push(elephant);
+    return refrigerator.close()
+  })((err)=>{
+    if (err) return callback(err);
+    return 'success';
+  })
+}</code></pre>
+                        <p class="fragment">一堆括号，仿佛在写Lisp</p>
                     </section>
                 </section>
                 <section>
@@ -252,43 +270,17 @@ thunk.all([
                     <p class="fragment">我也没用过，就不展开讲了</p>
                 </section>
                 <section>
-                    <h2>Promise系列</h2>
-                    <ul>
-                        <li>Q</li>
-                        <li>Bluebird</li>
-                        <li>m-promise</li>
-                    </ul>
-                </section>
-                <section>
-                    <pre><code class="javascript">const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
-
-
-fs.readFileAsync('01.EventEmitter.js')
-  .then((data)=>{
-    return fs.readFileAsync('02.Callback.js');
-  })
-  .then((data)=>{
-    console.log(data);
-  });
-
-Promise.all([
-  fs.readFileAsync('01.EventEmitter.js'),
-  fs.readFileAsync('02.Callback.js'),
-  fs.readFileAsync('03.Callback2.js'),
-]).then((res)=>{
-  console.log(Buffer.concat(res).toString());
-});</code></pre>
-                </section>
-                <section>
-                    <h1>Node.JS4/io.js</h1>
-                </section>
-                <section>
                     <section>
-                        <h2>native Promise</h2>
+                        <h2>Promise系列</h2>
+                        <ul>
+                            <li>Q</li>
+                            <li>Bluebird</li>
+                            <li>m-promise</li>
+                            <li><b>native Promise</b></li>
+                        </ul>
                     </section>
                     <section>
-                        <pre><code class="javascript">const p1 = new Promise(function(resolve, reject){
+                                <pre><code class="javascript">const p1 = new Promise(function(resolve, reject){
     /*	工厂函数
      *	resolve函数表示当前Promise正常结束,
      *	例子:　setTimeout(()=>resolve('bingo'), 1000)
@@ -303,8 +295,7 @@ const p2 = p1.then(
     , function rejected(err){
         /*处理p1工厂函数中调用reject传递来的值*/
     }
-)
-                        </code></pre>
+)</code></pre>
                     </section>
                     <section>
                         <pre><code class="javascript">const p3 = p2.then(
@@ -346,11 +337,36 @@ Promise.reject(val)
     生成一个状态为rejected的Promise实例
 Promise.all(array)
     生成一个Promise实例，当array中所有Promise实例状态
-	均为fulfilled时，该Promise实例的状态将从pending转换为fulfilled，若array
-	中某个Promise实例的状态为rejected，则该实例的状态将从pending转换为rejected.
+    均为fulfilled时，该Promise实例的状态将从pending转换为fulfilled，若array
+    中某个Promise实例的状态为rejected，则该实例的状态将从pending转换为rejected.
 Promise.race(array)
     生成一个Promise实例,当array中某个Promise实例状态发生转换，
-	那么该Promise实例也随之转换</code></pre>
+    那么该Promise实例也随之转换</code></pre>
+                    </section>
+                    <section>
+                    <pre><code class="javascript">const putElephantIntoRefrigerator = function () {
+  return Refrigerator.findOne({
+    empty: true
+  })
+    .then((refrigerator)=>{
+      return Elephant.findOne({
+        alive: true
+      }).then((elephant)=>[refrigerator, elephant])
+    })
+    .then(([refrigerator, elephant])=>{
+      return refrigerator.open()
+        .then(()=>[refrigerator, elephant]);
+    })
+    .then(([refrigerator, elephant])=>{
+      return refrigerator.push(elephant);
+    })
+    .catch((err)=>{
+      console.error(err);
+    })
+    .then(()=>{
+      return 'success';
+    })
+}</code></pre>
                     </section>
                     <section>
                         <h1>Promise没解决的问题</h1>
@@ -367,6 +383,35 @@ a().then(b).then(c)  //undefined
  *	const b = (v1) => [Promise.resolve('b'), v1]
  *	const c = ([v2, v1]) => console.log(v1)
  */</code></pre>
+                    </section>
+                    <section>
+                        <h3>Promise扩展</h3>
+                        <pre><code class="javascript">const putElephantIntoRefrigerator = function () {
+  return Promise.all([
+    Refrigerator.findOne({
+      empty: true
+    }),
+    Elephant.findOne({
+      alive: true
+    })
+  ])
+    .then(([refrigerator, elephant])=>{
+      return refrigerator.open()
+        .return([refrigerator, elephant]);
+    })
+    .then(([refrigerator, elephant])=>{
+      return refrigerator.push(elephant);
+    })
+    .then((refrigerator)=>{
+      return refrigerator.close();
+    })
+    .then(()=>{
+      return 'success';
+    })
+    .catch((err)=>{
+      console.error(err);
+    })
+}</code></pre>
                     </section>
                 </section>
                 <section>
@@ -385,8 +430,8 @@ a().then(b).then(c)  //undefined
                     <section>
                         其实就是迭代器，跟C#的IEnumerator和Java的Iterator一样。
                         <pre><code class="javascript">function* enumerable(){
-	yield 1
-	yield 2
+    yield 1
+    yield 2
 }
 for (let num of enumerable())console.log(num)</code></pre>
                         现在我们将1,2替换为代码
@@ -407,28 +452,81 @@ for (let num of enumerable())console.log(num)</code></pre>
     next: function(val){
       switch(++state){
          case 0:	console.log(msg + ' after')
-			break
+            break
          case 1:	var msg1 = val
-			console.log(val + ' after')
-			break
+            console.log(val + ' after')
+            break
          case 2:	var msg2 = val
-			console.log(msg2 + ' over')
-			break
+            console.log(msg2 + ' over')
+            break
       }
     }}}</code></pre>
                         调用next函数就可以从之前退出的地方继续执行了。
                     </section>
                     <section>
-                        <pre><code class="javascript">
+                        <h3>那么怎么用generator把大象塞进冰箱里</h3>
+                        <pre><code class="javascript">const putElephantIntoRefrigerator = function* () {
+  try{
+    let [refrigerator, elephant] = yield Promise.all([
+      Refrigerator.findOne({
+        empty: true
+      }),
+      Elephant.findOne({
+        alive: true
+      })
+    ])
+    yield refrigerator.open()
+    yield refrigerator.push(elephant);
+    yield refrigerator.close();
+    return 'success';
+  } catch (e){
+    console.error(e);
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section>
+                        Generator终归到底是一个迭代器，还需要有人去一步一步的执行他
+                        在此之前，有一个叫TJ的大神写了一个叫co的模块完成这件事，它是什么画风呢？
+                        <pre><code class="javascript">const putElephantIntoRefrigerator = function* () {
+......
+}
 
+co(putElephantIntoRefrigerator)
+  .then((result)=>{
+    console.log(result);
+  })
                         </code></pre>
                     </section>
                 </section>
                 <section>
-                    <h1>Node.JS7/Babel</h1>
-                </section>
-                <section>
-                    <h2>async/await</h2>
+                    <section>
+                        <h1>Node.JS7/Babel</h1>
+                    </section>
+                    <section>
+                        <h2>async/await</h2>
+                    </section>
+                    <section>
+                        <pre><code class="javascript">const putElephantIntoRefrigerator = async function () {
+  try{
+    let [refrigerator, elephant] = await Promise.all([
+      Refrigerator.findOne({
+        empty: true
+      }),
+      Elephant.findOne({
+        alive: true
+      })
+    ])
+    await refrigerator.open()
+    await refrigerator.push(elephant);
+    await refrigerator.close();
+    return 'success';
+  } catch (e){
+    console.error(e);
+  }
+}
+                        </code></pre>
+                    </section>
                 </section>
             </div>
         </div>
