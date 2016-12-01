@@ -487,7 +487,23 @@ for (let num of enumerable())console.log(num)</code></pre>
                     </section>
                     <section>
                         Generator终归到底是一个迭代器，还需要有人去一步一步的执行他
-                        在此之前，有一个叫TJ的大神写了一个叫co的模块完成这件事，它是什么画风呢？
+                        <pre><code class="javascript">const run = function run(func){
+  func();
+  return new Promise(function(resolve, reject){
+    while(1){
+      let val = func.next();
+      if (val.done){
+        return resolve(val.value);
+      }
+      val.value.then((result)=>{
+        func.next(result);
+      })
+    }
+  })
+}</code></pre>
+                    </section>
+                    <section>
+                        有一个叫TJ的大神写了一个叫co的模块完成这件事，它是什么画风呢？
                         <pre><code class="javascript">const putElephantIntoRefrigerator = function* () {
 ......
 }
@@ -527,6 +543,11 @@ co(putElephantIntoRefrigerator)
 }
                         </code></pre>
                     </section>
+                </section>
+                <section>
+                    <p>曾经我幻想着有一天，浏览器上也能像Node一样全部兼容Promise，Generator和async/await</p>
+                    <p class="fragment">直到</p>
+
                 </section>
             </div>
         </div>
