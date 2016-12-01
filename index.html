@@ -1,33 +1,50 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>NodeJS异步发展史</title>
+        <title>NodeJS异步发展史</title>
 
-		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/black.css">
 
-		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/zenburn.css">
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
 
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>
-					<h1>NodeJS异步发展史</h1>
-				</section>
-				<section>
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1>NodeJS异步发展史</h1>
+                </section>
+                <section>
+                    <h1>其实我想说的是</h1>
+                    <pre><code>a(function(){
+    b(function(){
+        c(function(){
+            d()
+        })
+    })
+})</code></pre>
+To
+                <pre><code>;(async function(){
+    await a()
+    await b()
+    await c()
+    await d()
+}())</code></pre>
+                </section>
+                <section>
                     <h1>很久很久以前</h1>
                 </section>
                 <section>
@@ -267,10 +284,145 @@ Promise.all([
                     <h1>Node.JS4/io.js</h1>
                 </section>
                 <section>
-                    <h2>native Promise</h2>
+                    <section>
+                        <h2>native Promise</h2>
+                    </section>
+                    <section>
+                        <pre><code class="javascript">const p1 = new Promise(function(resolve, reject){
+    /*	工厂函数
+     *	resolve函数表示当前Promise正常结束,
+     *	例子:　setTimeout(()=>resolve('bingo'), 1000)
+     *	reject函数表示当前Promise发生异常,
+     *	例子:　setTimeout(()=>reject(Error('OMG!')), 1000)
+     */
+})
+const p2 = p1.then(
+    function fulfilled(val){
+        return val + 1
+    }
+    , function rejected(err){
+        /*处理p1工厂函数中调用reject传递来的值*/
+    }
+)
+                        </code></pre>
+                    </section>
+                    <section>
+                        <pre><code class="javascript">const p3 = p2.then(
+    function fulfilled(val){
+        return new Promise(function(resolve){
+                setTimeout(()=>resolve(val+1), 10000)
+            })
+    }
+    , function rejected(err){
+        /*处理p1或p2调用reject或throw error的值*/
+    }
+)
+p3.catch(function rejected(err){
+        /*
+         *	处理p1或p2或p3调用reject
+         *	或throw error的值
+         */
+    })</code></pre>
+                    </section>
+                    <section>
+                        <h3>Promises/A+中规定</h3>
+                        <ol>
+                            <li>Promise状态为pending（默认值）、fulfilled或rejected</li>
+                            <li>状态仅能从pending->fulfilled或pending->rejected</li>
+                            <li>多个Promise构成责任链，状态变化事件回调函数的处理结果会影响下一个Promsie实例的状态</li>
+                        </ol>
+                    </section>
+                    <section>
+                        <pre><code class="javascript">new Promise(function(resolve, reject){})
+    带工厂函数的构造函数
+Promise.prototype.then(fulfilled()=>{}, rejected()=>{})
+    订阅Promise实例状态
+    从pending到fulfilled，和从pending到rejected的变化
+Promise.prototype.catch(rejected()=>{})
+    订阅Promise实例状态从pending到rejected的变化
+Promise.resolve(val)
+    生成一个状态为fulfilled的Promise实例
+Promise.reject(val)
+    生成一个状态为rejected的Promise实例
+Promise.all(array)
+    生成一个Promise实例，当array中所有Promise实例状态
+	均为fulfilled时，该Promise实例的状态将从pending转换为fulfilled，若array
+	中某个Promise实例的状态为rejected，则该实例的状态将从pending转换为rejected.
+Promise.race(array)
+    生成一个Promise实例,当array中某个Promise实例状态发生转换，
+	那么该Promise实例也随之转换</code></pre>
+                    </section>
+                    <section>
+                        <h1>Promise没解决的问题</h1>
+                        <pre><code class="javascript">const a = () => Promise.resolve('a')
+const b = (v1) => Promise.resolve('b')
+const c = (v2, v1) => console.log(v1)
+
+a().then(b).then(c)  //undefined
+
+
+
+
+/*
+ *	const b = (v1) => [Promise.resolve('b'), v1]
+ *	const c = ([v2, v1]) => console.log(v1)
+ */</code></pre>
+                    </section>
                 </section>
                 <section>
-                    <h2>Generator</h2>
+                    <section>
+                        <h2>Generator</h2>
+                    </section>
+                    <section>
+                        <h3>Coroutine</h3>
+                        <p>Coroutine中文就是协程，意思就是线程间采用协同合作的方式工作，而不是抢占式的方式工作。</p>
+                        <p>由于JS是单线程运行的，所以这里的Coroutine就是</p>
+                        <b>一个可以部分执行后退出，后续可在之前退出的地方继续往下执行的函数.</b>
+                    </section>
+                    <section>
+                        <h2>Generator</h2>
+                    </section>
+                    <section>
+                        其实就是迭代器，跟C#的IEnumerator和Java的Iterator一样。
+                        <pre><code class="javascript">function* enumerable(){
+	yield 1
+	yield 2
+}
+for (let num of enumerable())console.log(num)</code></pre>
+                        现在我们将1,2替换为代码
+                        <pre><code class="javascript">function* enumerable(msg){
+  console.log(msg)
+  var msg1 = yield msg + ' after ' // 断点
+  console.log(msg1)
+  var msg2 = yield msg1 + ' after' // 断点
+  console.log(msg2 + ' over')
+}</code></pre>
+                    </section>
+                    <section>
+                        <h3>执行原理</h3>
+                        Babel编译器会将上述代码转换成
+                        <pre><code class="javascript">const enumerable = function(msg){
+  var state = -1
+  return {
+    next: function(val){
+      switch(++state){
+         case 0:	console.log(msg + ' after')
+			break
+         case 1:	var msg1 = val
+			console.log(val + ' after')
+			break
+         case 2:	var msg2 = val
+			console.log(msg2 + ' over')
+			break
+      }
+    }}}</code></pre>
+                        调用next函数就可以从之前退出的地方继续执行了。
+                    </section>
+                    <section>
+                        <pre><code class="javascript">
+
+                        </code></pre>
+                    </section>
                 </section>
                 <section>
                     <h1>Node.JS7/Babel</h1>
@@ -278,25 +430,25 @@ Promise.all([
                 <section>
                     <h2>async/await</h2>
                 </section>
-			</div>
-		</div>
+            </div>
+        </div>
 
-		<script src="lib/js/head.min.js"></script>
-		<script src="js/reveal.js"></script>
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
 
-		<script>
-			// More info https://github.com/hakimel/reveal.js#configuration
-			Reveal.initialize({
-				history: true,
+        <script>
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                history: true,
 
-				// More info https://github.com/hakimel/reveal.js#dependencies
-				dependencies: [
-					{ src: 'plugin/markdown/marked.js' },
-					{ src: 'plugin/markdown/markdown.js' },
-					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
-				]
-			});
-		</script>
-	</body>
+                // More info https://github.com/hakimel/reveal.js#dependencies
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+                ]
+            });
+        </script>
+    </body>
 </html>
